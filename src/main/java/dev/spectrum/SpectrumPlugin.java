@@ -31,6 +31,17 @@ public class SpectrumPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        try {
+            enableInner();
+        } catch (RuntimeException e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Spectrum failed to start and will be disabled. This "
+                    + "is usually a bad config.yml, messages.yml, chatcolors.yml or namegradients.yml - check the "
+                    + "warnings above this, or delete the whole plugins/Spectrum folder to regenerate defaults.", e);
+            getServer().getPluginManager().disablePlugin(this);
+        }
+    }
+
+    private void enableInner() {
         messages = new Messages(this);
         styles = new StyleService(this);
         selections = new Selections(this);
