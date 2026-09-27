@@ -58,10 +58,6 @@ public final class StyleLibrary {
         return new StyleLibrary(kind, Collections.unmodifiableMap(styles), defaultId);
     }
 
-    public StyleKind kind() {
-        return kind;
-    }
-
     public @Nullable Style get(@Nullable String id) {
         return id == null ? null : styles.get(id.toLowerCase(Locale.ROOT));
     }

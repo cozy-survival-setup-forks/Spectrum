@@ -130,10 +130,16 @@ public final class StyleCommand implements TabExecutor {
                 Placeholder.component("style", style.displayComponent()),
                 Placeholder.unparsed("player", target.getName())};
         if (action.equals("give")) {
-            runCommand(plugin.settings().permissionSetCommand(), target, style);
+            if (!runCommand(plugin.settings().permissionSetCommand(), target, style)) {
+                plugin.messages().send(sender, "admin-not-configured");
+                return;
+            }
             plugin.messages().send(sender, "admin-give", tags);
         } else {
-            runCommand(plugin.settings().permissionUnsetCommand(), target, style);
+            if (!runCommand(plugin.settings().permissionUnsetCommand(), target, style)) {
+                plugin.messages().send(sender, "admin-not-configured");
+                return;
+            }
             if (style.id().equals(plugin.selections().get(target.getUniqueId(), kind))) {
                 plugin.selections().set(target, kind, null);
             }
@@ -141,11 +147,12 @@ public final class StyleCommand implements TabExecutor {
         }
     }
 
-    /** Runs a command from config.yml as the console, with {player} and {permission} filled in. */
-    private void runCommand(String template, Player target, Style style) {
-        if (template.isBlank()) return;
+    /** Runs a command from config.yml as the console, with {player} and {permission} filled in. Returns false if none is set. */
+    private boolean runCommand(String template, Player target, Style style) {
+        if (template.isBlank()) return false;
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
                 template.replace("{player}", target.getName()).replace("{permission}", style.permission()));
+        return true;
     }
 
     @Override

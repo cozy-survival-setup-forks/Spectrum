@@ -14,8 +14,10 @@ list-header: "<white>Your styles:"
 list-entry: "<gray>▸ <style> <dark_gray>(<id>)"
 admin-give: "<white>Gave <style><white> to <white><player><white>."
 admin-remove: "<white>Removed <style><white> from <white><player><white>."
+admin-not-configured: "<red>commands.permission-set / permission-unset is not set in config.yml."
 player-not-found: "<red><player> is not online."
 reloaded: "<white>Reloaded the files."
+reload-failed: "<red>chatcolors.yml or namegradients.yml has a mistake in it - keeping the styles already loaded. Check the console."
 preview: "<gray><id><dark_gray>: <text>"
 
 usage-chat:

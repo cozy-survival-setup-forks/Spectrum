@@ -75,7 +75,7 @@ In chat the shadow needs the message to stay a component all the way to the play
 - `spectrum.chat.<id>` and `spectrum.name.<id>`: use one style (or set your own with `permission:` on the style)
 - `spectrum.chat.*` and `spectrum.name.*`: use all of them (op by default)
 - `spectrum.admin`: reload, preview, give and remove
-- `spectrum.chat.codes`: write colour codes and MiniMessage in chat (needs `chat.allow-color-codes: true`)
+- `spectrum.chatcodes`: write colour codes and MiniMessage in chat (needs `chat.allow-color-codes: true`) - deliberately outside the `spectrum.chat.*` namespace, so granting "every chat colour" never also grants this
 
 Set `use-permissions: false` in `config.yml` to let everybody use every style.
 

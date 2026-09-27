@@ -3,11 +3,13 @@ package dev.spectrum;
 import dev.spectrum.style.Style;
 import dev.spectrum.style.StyleKind;
 import dev.spectrum.style.StyleLibrary;
+import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -23,15 +25,28 @@ public final class StyleService {
         this.plugin = plugin;
     }
 
-    void load() {
+    /** Loads both style files. Returns false if either one is broken - the styles it held stay in place. */
+    boolean load() {
         Map<StyleKind, StyleLibrary> loaded = new EnumMap<>(StyleKind.class);
+        boolean ok = true;
         for (StyleKind kind : StyleKind.values()) {
             File file = new File(plugin.getDataFolder(), kind.fileName());
             if (!file.exists()) plugin.saveResource(kind.fileName(), false);
-            YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
-            loaded.put(kind, StyleLibrary.load(kind, yaml, plugin.getLogger(), plugin.settings().glitch()));
+            YamlConfiguration yaml = new YamlConfiguration();
+            try {
+                yaml.load(file);
+                loaded.put(kind, StyleLibrary.load(kind, yaml, plugin.getLogger(), plugin.settings().glitch()));
+            } catch (InvalidConfigurationException | IOException e) {
+                // YamlConfiguration.loadConfiguration(File) would otherwise swallow this and hand back
+                // an empty config, which wipes every style of this kind with no error beyond a console log.
+                plugin.getLogger().warning(kind.fileName() + " is broken, keeping the styles already loaded: " + e.getMessage());
+                ok = false;
+                StyleLibrary previous = libraries.get(kind);
+                if (previous != null) loaded.put(kind, previous);
+            }
         }
         libraries = loaded;
+        return ok;
     }
 
     public StyleLibrary library(StyleKind kind) {
@@ -54,10 +69,18 @@ public final class StyleService {
      */
     public @Nullable Style equipped(Player player, StyleKind kind) {
         StyleLibrary library = library(kind);
-        Style style = library.get(plugin.selections().get(player.getUniqueId(), kind));
-        if (style == null && !library.defaultId().isEmpty()) {
-            style = library.get(library.defaultId());
+        Style picked = library.get(plugin.selections().get(player.getUniqueId(), kind));
+        if (picked != null && canUse(player, picked)) {
+            return picked;
         }
-        return style != null && canUse(player, style) ? style : null;
+        // The pick is missing, or a permission the player used to have was taken away - fall back
+        // to the server default instead of leaving them with no style at all.
+        if (!library.defaultId().isEmpty()) {
+            Style fallback = library.get(library.defaultId());
+            if (fallback != null && canUse(player, fallback)) {
+                return fallback;
+            }
+        }
+        return null;
     }
 }

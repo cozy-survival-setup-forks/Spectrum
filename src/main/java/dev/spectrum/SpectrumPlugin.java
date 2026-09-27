@@ -66,6 +66,7 @@ public class SpectrumPlugin extends JavaPlugin {
      * plain string, which drops the shadow of glitch colours. Colours themselves survive, so this only matters when a
      * glitch style exists.
      */
+    @SuppressWarnings("deprecation") // read-only detection of legacy listeners, not a functional use of the event
     private void warnAboutLegacyChatPlugins() {
         boolean glitch = styles.library(StyleKind.CHAT).all().stream()
                 .anyMatch(style -> style instanceof PaletteStyle palette && palette.glitch());
@@ -82,14 +83,15 @@ public class SpectrumPlugin extends JavaPlugin {
         }
     }
 
-    /** Reloads config.yml, messages.yml and the two style files. */
-    public void reloadAll() {
+    /** Reloads config.yml, messages.yml and the two style files. Returns false if a style file was broken. */
+    public boolean reloadAll() {
         saveDefaultConfig();
         reloadConfig();
-        settings = new Settings(getConfig());
+        settings = new Settings(getConfig(), getLogger());
         messages.load();
-        styles.load();
+        boolean ok = styles.load();
         hooks.load();
+        return ok;
     }
 
     public Settings settings() {

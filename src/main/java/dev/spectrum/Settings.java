@@ -6,15 +6,19 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
+import java.util.logging.Logger;
+
 /**
  * The options in config.yml.
  */
 public final class Settings {
 
     private final FileConfiguration config;
+    private final Logger log;
 
-    Settings(FileConfiguration config) {
+    Settings(FileConfiguration config, Logger log) {
         this.config = config;
+        this.log = log;
     }
 
     /** When off, every player can use every style. */
@@ -32,7 +36,7 @@ public final class Settings {
         return config.getBoolean("nickname-colors-win", true);
     }
 
-    /** Whether players with spectrum.chat.codes can write colour codes and MiniMessage in their messages. */
+    /** Whether players with spectrum.chatcodes can write colour codes and MiniMessage in their messages. */
     public boolean allowColorCodes() {
         return config.getBoolean("chat.allow-color-codes", false);
     }
@@ -44,8 +48,13 @@ public final class Settings {
 
     /** The glitch look for chat colours: white letters with the colour of the style as their shadow. */
     public GlitchOptions glitch() {
-        TextColor text = Palette.parseColor(config.getString("glitch.text", "white"));
-        return new GlitchOptions(config.getBoolean("glitch.all", false), text == null ? NamedTextColor.WHITE : text);
+        String raw = config.getString("glitch.text", "white");
+        TextColor text = Palette.parseColor(raw);
+        if (text == null) {
+            log.warning("glitch.text: '" + raw + "' is not a colour, using white");
+            text = NamedTextColor.WHITE;
+        }
+        return new GlitchOptions(config.getBoolean("glitch.all", false), text);
     }
 
     /** The command that gives a player the permission of a style. {player} and {permission} are filled in. */

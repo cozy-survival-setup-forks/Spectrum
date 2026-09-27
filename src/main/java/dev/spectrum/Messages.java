@@ -1,6 +1,5 @@
 package dev.spectrum;
 
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -10,7 +9,6 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,6 +39,10 @@ public final class Messages {
         var defaults = plugin.getResource("messages.yml");
         if (defaults != null) {
             file.setDefaults(YamlConfiguration.loadConfiguration(new InputStreamReader(defaults, StandardCharsets.UTF_8)));
+            // Every lookup below passes its own explicit default ("") to getString/getStringList,
+            // which skips consulting getDefaults() entirely - without this, a key missing from an
+            // admin's older messages.yml just goes silently empty instead of using the bundled text.
+            file.options().copyDefaults(true);
         }
     }
 
@@ -62,18 +64,6 @@ public final class Messages {
             case 'o' -> "<italic>";
             default -> "<reset>";
         };
-    }
-
-    public Component component(String key, TagResolver... resolvers) {
-        return MINI.deserialize(convertLegacy(file.getString(key, "")), resolvers);
-    }
-
-    public List<String> lines(String key) {
-        return file.getStringList(key);
-    }
-
-    public boolean has(String key) {
-        return file.isString(key) ? !file.getString(key, "").isEmpty() : file.isList(key) && !file.getStringList(key).isEmpty();
     }
 
     /** Sends a message with the prefix. Empty messages are skipped, so any of them can be turned off. */

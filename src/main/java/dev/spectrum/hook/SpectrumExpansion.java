@@ -15,13 +15,11 @@ import java.util.Locale;
  * <pre>
  * %spectrum_name%                        the player's name in their name gradient (or with the colours of their nickname), with &amp;#rrggbb codes
  * %spectrum_realname%                    the player's own name, with no colours
- * %spectrum_name_legacy%                 the same with § codes,  %spectrum_name_amp% with &amp;#rrggbb codes
  * %spectrum_&lt;kind&gt;_id%                   the id of the style the player has active, or "none"
- * %spectrum_&lt;kind&gt;_display%              its name, coloured, as MiniMessage
+ * %spectrum_&lt;kind&gt;_display%              its name, coloured, with &amp;#rrggbb codes (MiniMessage for a glitch style)
  * %spectrum_&lt;kind&gt;_equipped_&lt;id&gt;        true if that style is active
  * %spectrum_&lt;kind&gt;_owned_&lt;id&gt;           true if the player may use that style
- * %spectrum_&lt;kind&gt;_preview_&lt;id&gt;         the player's name (name) or the preview text (chat) in that style, as MiniMessage
- * %spectrum_&lt;kind&gt;_preview_legacy_&lt;id&gt;  the same with § codes,  preview_amp_&lt;id&gt; with &amp;#rrggbb codes
+ * %spectrum_&lt;kind&gt;_preview_&lt;id&gt;         the player's name (name) or the preview text (chat) in that style, with &amp;#rrggbb codes (MiniMessage for a glitch style)
  * </pre>
  * Only loaded when PlaceholderAPI is installed.
  */
@@ -51,6 +49,13 @@ final class SpectrumExpansion extends PlaceholderExpansion {
     @Override
     public boolean persist() {
         return true;
+    }
+
+    @Override
+    public @NotNull String getRequiredPlugin() {
+        // Without this, PlaceholderAPI has no reason to unregister the expansion when Spectrum is
+        // disabled (by a plugin manager or a reload), so it keeps serving from the old classloader.
+        return "Spectrum";
     }
 
     @Override
@@ -86,7 +91,6 @@ final class SpectrumExpansion extends PlaceholderExpansion {
             }
         }
 
-        String preview = kind == StyleKind.NAME ? plugin.hooks().nameOf(player) : plugin.settings().chatPreviewText();
         if (request.startsWith("equipped_")) {
             return String.valueOf(active != null && active.id().equals(request.substring(9)));
         }
@@ -94,7 +98,12 @@ final class SpectrumExpansion extends PlaceholderExpansion {
             Style style = plugin.styles().library(kind).get(request.substring(6));
             return String.valueOf(style != null && plugin.styles().canUse(player, style));
         }
-        if (request.startsWith("preview_")) return previewOf(kind, request.substring(8), style -> style.ampersand(preview));
+        if (request.startsWith("preview_")) {
+            // Only computed here, not above: it's a full PlaceholderAPI parse of name-source for the
+            // name kind, and equipped_/owned_ never use it.
+            String preview = kind == StyleKind.NAME ? plugin.hooks().nameOf(player) : plugin.settings().chatPreviewText();
+            return previewOf(kind, request.substring(8), style -> style.ampersand(preview));
+        }
         return null;
     }
 

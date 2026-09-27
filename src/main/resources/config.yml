@@ -17,7 +17,7 @@ use-permissions: true
 name-source: '%essentials_nickname%'
 
 chat:
-  # Players with the permission spectrum.chat.codes can write & colour codes and MiniMessage tags in messages.
+  # Players with the permission spectrum.chatcodes can write & colour codes and MiniMessage tags in messages.
   # Styles made of colours (mode: GRADIENT and so on) ignore them, styles with a format use them.
   allow-color-codes: false
   # The text shown by %spectrum_chat_preview_<id>% and /spectrum preview chat

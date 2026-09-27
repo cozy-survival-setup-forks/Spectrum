@@ -33,10 +33,7 @@ public final class SpectrumCommand implements TabExecutor {
 
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "reload" -> {
-                plugin.reloadAll();
-                plugin.messages().send(sender, "reloaded");
-            }
+            case "reload" -> plugin.messages().send(sender, plugin.reloadAll() ? "reloaded" : "reload-failed");
             case "preview" -> preview(sender, args);
             default -> plugin.messages().send(sender, "usage-spectrum");
         }

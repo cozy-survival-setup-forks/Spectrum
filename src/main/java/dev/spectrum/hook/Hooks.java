@@ -15,8 +15,15 @@ import java.util.regex.Pattern;
 public final class Hooks {
 
     private static final Pattern OLD_CODES = Pattern.compile("(?i)[&§](#[0-9a-f]{6}|x(?:[&§][0-9a-f]){6}|[0-9a-fk-or])");
-    private static final Pattern HAS_COLOURS = Pattern.compile("(?i)[&§](#[0-9a-f]{6}|x(?:[&§][0-9a-f]){6}|[0-9a-fk-o])|<(?:#[0-9a-f]{6}|gradient|rainbow)[:>]");
+    // Legacy codes only - NOT MiniMessage tags. A nickname plugin gates &-codes; it has no idea what
+    // <gradient>/<rainbow>/<click> mean, so treating those as "the nickname's own colour" would let a
+    // player get a gradient with no spectrum.name permission, or smuggle a click/hover tag into a name.
+    private static final Pattern HAS_COLOURS = Pattern.compile("(?i)[&§](#[0-9a-f]{6}|x(?:[&§][0-9a-f]){6}|[0-9a-fk-o])");
     private static final Pattern X_HEX = Pattern.compile("(?i)&x((?:&[0-9a-f]){6})");
+    private static final Pattern STRAY_BRACKETS = Pattern.compile("[<>\\\\]");
+    // Matches a placeholder token PlaceholderAPI left untouched, e.g. the whole name-source string
+    // coming back unchanged because the expansion it names (Essentials, etc.) isn't installed.
+    private static final Pattern UNRESOLVED_PLACEHOLDER = Pattern.compile("%[a-zA-Z0-9_-]+%");
 
     private final SpectrumPlugin plugin;
     private volatile boolean placeholderApi = false;
@@ -41,8 +48,19 @@ public final class Hooks {
         String source = plugin.settings().nameSource();
         if (source.isBlank() || !placeholderApi) return player.getName();
 
-        String name = plainText(PapiSupport.parse(player, source));
+        String parsed = PapiSupport.parse(player, source);
+        if (isUnresolved(parsed, source)) return player.getName();
+        String name = plainText(parsed);
         return name.isBlank() ? player.getName() : name;
+    }
+
+    /**
+     * True when PlaceholderAPI handed the placeholder back unresolved - the expansion it names (e.g.
+     * an Essentials nickname placeholder with Essentials not installed) isn't there. Otherwise every
+     * player's name becomes the literal placeholder text.
+     */
+    private static boolean isUnresolved(String parsed, String source) {
+        return parsed.equals(source) || UNRESOLVED_PLACEHOLDER.matcher(parsed).find();
     }
 
 
@@ -53,8 +71,15 @@ public final class Hooks {
     public String styledName(Player player) {
         String source = plugin.settings().nameSource();
         if (plugin.settings().nicknameColorsWin() && !source.isBlank() && placeholderApi) {
-            String raw = PapiSupport.parse(player, source).trim();
-            if (!raw.isBlank() && HAS_COLOURS.matcher(raw).find()) return ampersand(raw);
+            String parsed = PapiSupport.parse(player, source);
+            if (!isUnresolved(parsed, source)) {
+                // Strip any MiniMessage tags before the colour check, but keep legacy codes - that's
+                // the whole point of this branch. A leftover < or > (from a broken/nested tag stripTags
+                // didn't fully unwrap) is removed outright rather than risked, since it could re-form a
+                // click or hover tag once this reaches a formatter that parses placeholders as MiniMessage.
+                String raw = STRAY_BRACKETS.matcher(MiniMessage.miniMessage().stripTags(parsed)).replaceAll("").trim();
+                if (!raw.isBlank() && HAS_COLOURS.matcher(raw).find()) return ampersand(raw);
+            }
         }
         Style style = plugin.styles().equipped(player, StyleKind.NAME);
         return style == null ? null : style.ampersand(nameOf(player));
@@ -69,6 +94,10 @@ public final class Hooks {
     /** The text without colour codes and MiniMessage tags. */
     static String plainText(String text) {
         String withoutCodes = OLD_CODES.matcher(text).replaceAll("");
-        return MiniMessage.miniMessage().stripTags(withoutCodes).trim();
+        String withoutTags = MiniMessage.miniMessage().stripTags(withoutCodes);
+        // A nested/malformed sequence (e.g. "&&cc" or "<<red>red>") can leave a code or bracket
+        // fragment behind after one pass of the two strips above - remove any of those characters
+        // outright rather than risk a leftover fragment reforming a code or tag downstream.
+        return withoutTags.replaceAll("[&§<>\\\\]", "").trim();
     }
 }
