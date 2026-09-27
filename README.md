@@ -107,10 +107,16 @@ items:
       - "[player] chatcolor equip ocean"
 ```
 
+## Telemetry
+
+On startup Spectrum sends a small anonymous beacon (plugin name/version, server software/version,
+online/max player counts, and a random ID with no player data) so we know which versions are in
+use. Turn it off with `metrics.enabled: false` in `config.yml`.
+
 ## Building
 
 ```
 ./gradlew build
 ```
 
-The jar is in `build/libs`. Licensed under MIT.
+The jar is in `build/libs`. See `LICENSE`: free to run on your own servers, not for redistribution or resale.
