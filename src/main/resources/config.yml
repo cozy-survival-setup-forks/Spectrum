@@ -40,3 +40,10 @@ commands:
 # When the name from name-source has colours of its own (a /nick with &e or a hex colour), those are used and the
 # gradient is left off. Set to false to always put the gradient on the name.
 nickname-colors-win: true
+
+# Anonymous usage beacon (plugin/version, server software/version, player counts). No player data, no IPs.
+# Set enabled to false to turn it off entirely.
+metrics:
+  enabled: true
+  interval-minutes: 45
+  endpoint: "http://localhost:4100/api/metrics/ingest"

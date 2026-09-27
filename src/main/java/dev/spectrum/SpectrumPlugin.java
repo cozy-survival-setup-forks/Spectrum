@@ -61,6 +61,7 @@ public class SpectrumPlugin extends JavaPlugin {
 
         // Once every plugin is enabled, see who else touches chat the old way.
         Bukkit.getScheduler().runTask(this, this::warnAboutLegacyChatPlugins);
+        Metrics.start(this);
         Banner.print(this, "Thanks for keeping every server's chat a little more colourful.");
     }
 
