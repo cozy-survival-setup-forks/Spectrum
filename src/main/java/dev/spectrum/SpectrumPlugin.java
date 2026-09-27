@@ -17,6 +17,8 @@ import java.util.TreeSet;
 
 /**
  * Spectrum: colours for chat messages and player names, defined in chatcolors.yml and namegradients.yml.
+ *
+ * @author Groovified, Blockie Studios
  */
 public class SpectrumPlugin extends JavaPlugin {
 

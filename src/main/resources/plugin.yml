@@ -4,6 +4,7 @@ main: dev.spectrum.SpectrumPlugin
 api-version: '1.21'
 description: Chat colours and name gradients, defined in two simple files
 authors: [Groovified]
+website: https://discord.gg/blockie
 softdepend:
   - PlaceholderAPI
 
