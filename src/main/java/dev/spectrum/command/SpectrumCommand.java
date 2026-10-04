@@ -1,5 +1,6 @@
 package dev.spectrum.command;
 
+import dev.spectrum.Messages;
 import dev.spectrum.SpectrumPlugin;
 import dev.spectrum.style.Style;
 import dev.spectrum.style.StyleKind;
@@ -27,33 +28,35 @@ public final class SpectrumCommand implements TabExecutor {
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!sender.hasPermission("spectrum.admin")) {
-            plugin.messages().send(sender, "no-permission");
+            plugin.messages().send(sender, Messages.Kind.GENERAL, "no-permission");
             return true;
         }
 
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "reload" -> plugin.messages().send(sender, plugin.reloadAll() ? "reloaded" : "reload-failed");
+            case "reload" -> plugin.messages().send(sender, Messages.Kind.GENERAL,
+                    plugin.reloadAll() ? "reloaded" : "reload-failed");
             case "preview" -> preview(sender, args);
-            default -> plugin.messages().send(sender, "usage-spectrum");
+            default -> plugin.messages().send(sender, Messages.Kind.GENERAL, "usage-spectrum");
         }
         return true;
     }
 
     private void preview(CommandSender sender, String[] args) {
         if (args.length < 3) {
-            plugin.messages().send(sender, "usage-spectrum");
+            plugin.messages().send(sender, Messages.Kind.GENERAL, "usage-spectrum");
             return;
         }
         StyleKind kind = args[1].equalsIgnoreCase("name") ? StyleKind.NAME : StyleKind.CHAT;
+        Messages.Kind messageKind = Messages.Kind.of(kind);
         Style style = plugin.styles().library(kind).get(args[2]);
         if (style == null) {
-            plugin.messages().send(sender, "invalid-style");
+            plugin.messages().send(sender, messageKind, "invalid-style");
             return;
         }
         String text = kind == StyleKind.NAME && sender instanceof Player player
                 ? plugin.hooks().nameOf(player) : plugin.settings().chatPreviewText();
-        plugin.messages().send(sender, "preview", Placeholder.component("text", style.render(text)),
+        plugin.messages().send(sender, messageKind, "preview",Placeholder.component("text", style.render(text)),
                 Placeholder.unparsed("id", style.id()));
     }
 

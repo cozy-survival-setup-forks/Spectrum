@@ -1,9 +1,11 @@
 package dev.spectrum.command;
 
+import dev.spectrum.Messages;
 import dev.spectrum.SpectrumPlugin;
 import dev.spectrum.style.Style;
 import dev.spectrum.style.StyleKind;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -42,18 +44,23 @@ public final class StyleCommand implements TabExecutor {
             case "unequip", "off", "disable" -> unequip(sender);
             case "list" -> list(sender);
             case "admin" -> admin(sender, args);
-            default -> plugin.messages().send(sender, "usage-" + kind.key());
+            default -> send(sender, "usage-" + kind.key());
         }
         return true;
+    }
+
+    /** Sends a message with the prefix and texts of this kind (chat colour or name gradient). */
+    private void send(CommandSender to, String key, TagResolver... resolvers) {
+        plugin.messages().send(to, Messages.Kind.of(kind), key, resolvers);
     }
 
     private Player player(CommandSender sender) {
         if (sender instanceof Player player) {
             if (player.hasPermission("spectrum.use")) return player;
-            plugin.messages().send(sender, "no-permission");
+            send(sender, "no-permission");
             return null;
         }
-        plugin.messages().send(sender, "players-only");
+        send(sender, "players-only");
         return null;
     }
 
@@ -61,22 +68,22 @@ public final class StyleCommand implements TabExecutor {
         Player player = player(sender);
         if (player == null) return;
         if (args.length < 2) {
-            plugin.messages().send(sender, "usage-" + kind.key());
+            send(sender, "usage-" + kind.key());
             return;
         }
 
         Style style = plugin.styles().library(kind).get(args[1]);
         if (style == null) {
-            plugin.messages().send(sender, "invalid-style");
+            send(sender, "invalid-style");
             return;
         }
         if (!plugin.styles().canUse(player, style)) {
-            plugin.messages().send(sender, "not-owned", Placeholder.component("style", style.displayComponent()));
+            send(sender, "not-owned", Placeholder.component("style", style.displayComponent()));
             return;
         }
 
         plugin.selections().set(player, kind, style.id());
-        plugin.messages().send(sender, "equipped", Placeholder.component("style", style.displayComponent()));
+        send(sender, "equipped", Placeholder.component("style", style.displayComponent()));
     }
 
     private void unequip(CommandSender sender) {
@@ -84,7 +91,7 @@ public final class StyleCommand implements TabExecutor {
         if (player == null) return;
 
         plugin.selections().set(player, kind, null);
-        plugin.messages().send(sender, "unequipped");
+        send(sender, "unequipped");
     }
 
     private void list(CommandSender sender) {
@@ -94,56 +101,56 @@ public final class StyleCommand implements TabExecutor {
         List<Style> owned = plugin.styles().library(kind).all().stream()
                 .filter(style -> plugin.styles().canUse(player, style)).toList();
         if (owned.isEmpty()) {
-            plugin.messages().send(sender, "list-empty");
+            send(sender, "list-empty");
             return;
         }
-        plugin.messages().send(sender, "list-header");
+        send(sender, "list-header");
         for (Style style : owned) {
-            plugin.messages().send(sender, "list-entry", Placeholder.component("style", style.displayComponent()),
+            send(sender, "list-entry", Placeholder.component("style", style.displayComponent()),
                     Placeholder.unparsed("id", style.id()));
         }
     }
 
     private void admin(CommandSender sender, String[] args) {
         if (!sender.hasPermission("spectrum.admin")) {
-            plugin.messages().send(sender, "no-permission");
+            send(sender, "no-permission");
             return;
         }
         String action = args.length > 1 ? args[1].toLowerCase(Locale.ROOT) : "";
         if (args.length < 4 || !(action.equals("give") || action.equals("remove"))) {
-            plugin.messages().send(sender, "usage-" + kind.key());
+            send(sender, "usage-" + kind.key());
             return;
         }
 
         Player target = Bukkit.getPlayerExact(args[2]);
         if (target == null) {
-            plugin.messages().send(sender, "player-not-found", Placeholder.unparsed("player", args[2]));
+            send(sender, "player-not-found", Placeholder.unparsed("player", args[2]));
             return;
         }
         Style style = plugin.styles().library(kind).get(args[3]);
         if (style == null) {
-            plugin.messages().send(sender, "invalid-style");
+            send(sender, "invalid-style");
             return;
         }
 
-        var tags = new net.kyori.adventure.text.minimessage.tag.resolver.TagResolver[]{
+        var tags = new TagResolver[]{
                 Placeholder.component("style", style.displayComponent()),
                 Placeholder.unparsed("player", target.getName())};
         if (action.equals("give")) {
             if (!runCommand(plugin.settings().permissionSetCommand(), target, style)) {
-                plugin.messages().send(sender, "admin-not-configured");
+                send(sender, "admin-not-configured");
                 return;
             }
-            plugin.messages().send(sender, "admin-give", tags);
+            send(sender, "admin-give", tags);
         } else {
             if (!runCommand(plugin.settings().permissionUnsetCommand(), target, style)) {
-                plugin.messages().send(sender, "admin-not-configured");
+                send(sender, "admin-not-configured");
                 return;
             }
             if (style.id().equals(plugin.selections().get(target.getUniqueId(), kind))) {
                 plugin.selections().set(target, kind, null);
             }
-            plugin.messages().send(sender, "admin-remove", tags);
+            send(sender, "admin-remove", tags);
         }
     }
 

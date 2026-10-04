@@ -1,24 +1,40 @@
 # MiniMessage (<red>text</red>) and old & codes both work. <placeholders> are filled in.
 # Leave a message empty to turn it off. Lists use {prefix} where the prefix should go.
+#
+# prefix goes before general messages (reload, usage of /spectrum). prefix-chat and prefix-name go before the
+# chat colour and name gradient messages. Those have their own texts too: chat-equipped, name-equipped and so on.
+# A message with no chat-/name- version uses the plain key (no-permission, list-entry) for both.
 
 prefix: "<gradient:#ff5ecb:#5eb8ff><bold>SPECTRUM</bold></gradient> <dark_gray>» "
+prefix-chat: "<gradient:#ffb347:#ff5e62><bold>CHAT COLOR</bold></gradient> <dark_gray>» "
+prefix-name: "<gradient:#5eead4:#a78bfa><bold>NAME GRADIENT</bold></gradient> <dark_gray>» "
 
 no-permission: "<red>You do not have permission."
 players-only: "<red>Only players can do that."
-invalid-style: "<red>There is no style with that name."
-not-owned: "<white>You do not have <style><white>."
-equipped: "<white>You picked <style><white>."
-unequipped: "<white>Your style was <red>removed<white>."
-list-empty: "<gray>You do not have any styles yet."
-list-header: "<white>Your styles:"
 list-entry: "<gray>▸ <style> <dark_gray>(<id>)"
-admin-give: "<white>Gave <style><white> to <white><player><white>."
-admin-remove: "<white>Removed <style><white> from <white><player><white>."
 admin-not-configured: "<red>commands.permission-set / permission-unset is not set in config.yml."
 player-not-found: "<red><player> is not online."
 reloaded: "<white>Reloaded the files."
-reload-failed: "<red>chatcolors.yml or namegradients.yml has a mistake in it - keeping the styles already loaded. Check the console."
+reload-failed: "<red>chatcolors.yml, namegradients.yml or messages.yml has a mistake in it - keeping what was already loaded. Check the console."
 preview: "<gray><id><dark_gray>: <text>"
+
+chat-invalid-style: "<red>There is no chat colour with that name."
+chat-not-owned: "<white>You do not have the chat colour <style><white>."
+chat-equipped: "<white>Your chat colour is now <style><white>."
+chat-unequipped: "<white>Your chat colour was <red>removed<white>."
+chat-list-empty: "<gray>You do not have any chat colours yet."
+chat-list-header: "<white>Your chat colours:"
+chat-admin-give: "<white>Gave the chat colour <style><white> to <white><player><white>."
+chat-admin-remove: "<white>Removed the chat colour <style><white> from <white><player><white>."
+
+name-invalid-style: "<red>There is no name gradient with that name."
+name-not-owned: "<white>You do not have the name gradient <style><white>."
+name-equipped: "<white>Your name gradient is now <style><white>."
+name-unequipped: "<white>Your name gradient was <red>removed<white>."
+name-list-empty: "<gray>You do not have any name gradients yet."
+name-list-header: "<white>Your name gradients:"
+name-admin-give: "<white>Gave the name gradient <style><white> to <white><player><white>."
+name-admin-remove: "<white>Removed the name gradient <style><white> from <white><player><white>."
 
 usage-chat:
   - "{prefix}<white>Chat colours"

@@ -98,13 +98,13 @@ public class SpectrumPlugin extends JavaPlugin {
         }
     }
 
-    /** Reloads config.yml, messages.yml and the two style files. Returns false if a style file was broken. */
+    /** Reloads config.yml, messages.yml and the two style files. Returns false if messages.yml or a style file was broken. */
     public boolean reloadAll() {
         saveDefaultConfig();
         reloadConfig();
         settings = new Settings(getConfig(), getLogger());
-        messages.load();
-        boolean ok = styles.load();
+        boolean ok = messages.load();
+        ok &= styles.load();
         hooks.load();
         return ok;
     }
