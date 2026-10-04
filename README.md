@@ -60,6 +60,18 @@ MiniMessage (`<shadow:#f13a3aff><white>text`), so the menu plugin has to read Mi
 
 In chat the shadow needs the message to stay a component all the way to the player. A plugin that sets the chat format with the old chat event (`AsyncPlayerChatEvent#setFormat`) makes Paper turn the message into a plain string, and the shadow is lost while the colour stays. Tested: with Quill or no formatter the shadow arrives, with a legacy `setFormat` plugin it does not. When a glitch style exists, Spectrum lists the plugins that use the old chat event in the console at startup.
 
+## Messages
+
+Chat colours and name gradients each have their own prefix and their own texts in `messages.yml`: `prefix-chat`
+("CHAT COLOR") and `chat-equipped`, `chat-not-owned`, `chat-list-header` and so on, and `prefix-name` ("NAME GRADIENT")
+with the `name-` versions. `prefix` stays for general messages (reload, `/spectrum` usage). A message without a `chat-` /
+`name-` version (`no-permission`, `list-entry`) is shared by both. Lists use `{prefix}` for the prefix of their side.
+
+Older `messages.yml` files keep working: a key that is missing uses the bundled text, and an old shared key you edited
+(`equipped`, `invalid-style`, ...) still applies to both sides until you add the `chat-` / `name-` version. The new
+prefixes are not taken from your old `prefix`. To get the new texts, delete `messages.yml` and run `/spectrum reload`
+(or restart). A `messages.yml` with a YAML mistake is reported in the console and the messages already loaded stay.
+
 ## Commands
 
 | Command | Use |
