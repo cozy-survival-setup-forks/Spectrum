@@ -46,4 +46,3 @@ nickname-colors-win: true
 metrics:
   enabled: true
   interval-minutes: 45
-  endpoint: "http://localhost:4100/api/metrics/ingest"
