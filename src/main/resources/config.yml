@@ -1,3 +1,4 @@
+config-version: 1
 # Spectrum
 #
 # The styles themselves are in two files:
@@ -45,4 +46,3 @@ nickname-colors-win: true
 # Set enabled to false to turn it off entirely.
 metrics:
   enabled: true
-  interval-minutes: 45

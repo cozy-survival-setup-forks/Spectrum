@@ -3,6 +3,13 @@ package dev.spectrum;
 import dev.spectrum.command.SpectrumCommand;
 import dev.spectrum.command.StyleCommand;
 import dev.spectrum.hook.Hooks;
+import dev.spectrum.safe.ConfigMigrator;
+import dev.spectrum.safe.Doctor;
+import dev.spectrum.safe.FileBackups;
+import dev.spectrum.safe.Guard;
+import dev.spectrum.safe.Health;
+import dev.spectrum.safe.Prep;
+import dev.spectrum.safe.ServerId;
 import dev.spectrum.style.PaletteStyle;
 import dev.spectrum.style.StyleKind;
 import org.bukkit.Bukkit;
@@ -12,6 +19,9 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.plugin.RegisteredListener;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,6 +31,14 @@ import java.util.TreeSet;
  * @author Groovified, Blockie Studios
  */
 public class SpectrumPlugin extends JavaPlugin {
+
+    private static final int CONFIG_VERSION = 1;
+    private static final int LANG_VERSION = 1;
+
+    private final List<Prep.Spec> files = List.of(
+            new Prep.Spec("config.yml", "config-version", CONFIG_VERSION, Prep.configMigrator(CONFIG_VERSION), null),
+            new Prep.Spec("messages.yml", "lang-version", LANG_VERSION, new ConfigMigrator("lang-version", LANG_VERSION), null));
+    private boolean started;
 
     // Read from the async chat thread in SpectrumListener, written from the main thread on reload.
     private volatile Settings settings;
@@ -42,12 +60,16 @@ public class SpectrumPlugin extends JavaPlugin {
     }
 
     private void enableInner() {
+        saveDefaultConfig();
+        Health.storage("YAML files in the plugin folder (config.yml, messages.yml, chatcolors.yml, namegradients.yml, data.yml)");
+        Prep.startup(this, files);
         messages = new Messages(this);
         styles = new StyleService(this);
         selections = new Selections(this);
         hooks = new Hooks(this);
 
         reloadAll();
+        started = true;
 
         for (StyleKind kind : StyleKind.values()) {
             StyleCommand command = new StyleCommand(this, kind);
@@ -72,7 +94,9 @@ public class SpectrumPlugin extends JavaPlugin {
 
         // Once every plugin is enabled, see who else touches chat the old way.
         Bukkit.getScheduler().runTask(this, this::warnAboutLegacyChatPlugins);
-        Metrics.start(this);
+        boolean beacon = getConfig().getBoolean("metrics.enabled", true);
+        Metrics.start(this, ServerId.resolve(getDataFolder().toPath(),
+                ServerId.inYaml(new File(getDataFolder(), "data.yml").toPath(), getLogger()), beacon, getLogger()));
         Banner.print(this, "Thanks for keeping every server's chat a little more colourful.");
     }
 
@@ -100,6 +124,13 @@ public class SpectrumPlugin extends JavaPlugin {
 
     /** Reloads config.yml, messages.yml and the two style files. Returns false if messages.yml or a style file was broken. */
     public boolean reloadAll() {
+        if (started) {
+            List<Guard.Problem> problems = Prep.validate(this, files);
+            if (!problems.isEmpty()) {
+                Prep.logRejected(this, problems);
+                return false;
+            }
+        }
         saveDefaultConfig();
         reloadConfig();
         settings = new Settings(getConfig(), getLogger());
@@ -107,6 +138,22 @@ public class SpectrumPlugin extends JavaPlugin {
         ok &= styles.load();
         hooks.load();
         return ok;
+    }
+
+    /** The text of /spectrum doctor. */
+    public List<String> doctor() {
+        List<String> extra = new ArrayList<>(Prep.versionLines(this, files));
+        extra.add("Pending writes: 0 (this plugin keeps no queued saves)");
+        return Doctor.report(getName(), getPluginMeta().getVersion(), extra);
+    }
+
+    /** /spectrum backup now: a verified copy of the settings and data files. */
+    public boolean backupNow() {
+        List<String> names = new ArrayList<>(Prep.fileNames(files));
+        names.add("chatcolors.yml");
+        names.add("namegradients.yml");
+        names.add("data.yml");
+        return FileBackups.snapshot(getDataFolder().toPath(), names, 5, getLogger());
     }
 
     public Settings settings() {

@@ -1,3 +1,4 @@
+lang-version: 1
 # MiniMessage (<red>text</red>) and old & codes both work. <placeholders> are filled in.
 # Leave a message empty to turn it off. Lists use {prefix} where the prefix should go.
 #

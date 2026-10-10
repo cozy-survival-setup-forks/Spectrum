@@ -37,6 +37,13 @@ public final class SpectrumCommand implements TabExecutor {
             case "reload" -> plugin.messages().send(sender, Messages.Kind.GENERAL,
                     plugin.reloadAll() ? "reloaded" : "reload-failed");
             case "preview" -> preview(sender, args);
+            case "doctor" -> plugin.doctor().forEach(sender::sendPlainMessage);
+            case "backup" -> {
+                if (args.length < 2 || !args[1].equalsIgnoreCase("now"))
+                    sender.sendPlainMessage("Use /spectrum backup now");
+                else
+                    sender.sendPlainMessage(plugin.backupNow() ? "Backup made and checked." : "The backup FAILED, see the console.");
+            }
             default -> plugin.messages().send(sender, Messages.Kind.GENERAL, "usage-spectrum");
         }
         return true;
@@ -64,7 +71,7 @@ public final class SpectrumCommand implements TabExecutor {
     public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
         if (!sender.hasPermission("spectrum.admin")) return List.of();
         List<String> options = new java.util.ArrayList<>();
-        if (args.length == 1) options.addAll(List.of("reload", "preview"));
+        if (args.length == 1) options.addAll(List.of("reload", "preview", "doctor", "backup"));
         if (args.length == 2 && args[0].equalsIgnoreCase("preview")) options.addAll(List.of("chat", "name"));
         if (args.length == 3 && args[0].equalsIgnoreCase("preview")) {
             StyleKind kind = args[1].equalsIgnoreCase("name") ? StyleKind.NAME : StyleKind.CHAT;
